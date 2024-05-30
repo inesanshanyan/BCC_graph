@@ -49,7 +49,6 @@ private:
     std::vector<int> edges;
     std::vector<std::vector<int>> blocks;
     std::vector<int> currentBlock;
-    
 };
 
 

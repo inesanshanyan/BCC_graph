@@ -101,7 +101,7 @@ void Graph::BCCUtil(int u, int disc[], int low[], std::list<Edge>* st, int paren
 {
 	static int time = 0;
 	disc[u] = ++time;
-    low[u] = ++time;
+    low[u] = disc[u];
 	int children = 0;
 
 	std::list<int>::iterator i;
@@ -110,20 +110,15 @@ void Graph::BCCUtil(int u, int disc[], int low[], std::list<Edge>* st, int paren
 		if (disc[v] == -1) {
 			children++;
 			parent[v] = u;
-			
             st->push_back(Edge(u, v));
 			BCCUtil(v, disc, low, st, parent);
-
 			low[u] = std::min(low[u], low[v]);
-
 			if ((disc[u] == 1 && children > 1) || (disc[u] > 1 && low[v] >= disc[u])) {
 				while (st->back().u != u || st->back().v != v) {
-					//std::cout << st->back().u << "--" << st->back().v << " ";
                     currentBlock.push_back(st->back().u);
                     currentBlock.push_back(st->back().v);
 					st->pop_back();
 				}
-				//std::cout << st->back().u << "--" << st->back().v;
                 currentBlock.push_back(st->back().u);
                 currentBlock.push_back(st->back().v);
 				st->pop_back();
@@ -156,20 +151,17 @@ void Graph::BCC()
 		low[i] = NIL;
 		parent[i] = NIL;
 	}
-
 	for (int i = 0; i < V; i++) {
 		if (disc[i] == NIL)
 			BCCUtil(i, disc, low, st, parent);
-
-		int j = 0;
+		bool check = false;
 		while (st->size() > 0) {
-			j = 1;
-			//std::cout << st->back().u << "--" << st->back().v << " ";
+			check = true;
             currentBlock.push_back(st->back().u);
             currentBlock.push_back(st->back().v);
 			st->pop_back();
 		}
-		if (j == 1) {
+		if (check) {
             removeDuplicates(currentBlock);
             blocks.push_back(currentBlock);
             currentBlock.clear();
@@ -202,13 +194,15 @@ void Graph::drawBlocks(const std::string& filename){
         std::cerr << "Error opening file: " << filename << std::endl;
         return;
     }
-
+    bool check = false;
     outfile << "graph G {" << std::endl;
     for(auto row = blocks.begin(); row != blocks.end(); ++row) {
+        check = false;
         for(const auto& col : *row) {
             for(auto row2 = row + 1; row2 != blocks.end(); ++row2) {
                 auto it = std::find(row2->begin(), row2->end(), col);
                 if (it != row2->end()) {
+                    check = true;
                     for (const auto& element : *row) {
                         outfile << element;
                     }
@@ -219,6 +213,12 @@ void Graph::drawBlocks(const std::string& filename){
                     outfile << std::endl;
                 }
             }
+        }
+        if(check == false){
+            for (const auto& element : *row) {
+                outfile << element;
+            }
+            outfile << std::endl;
         }
     }
 
